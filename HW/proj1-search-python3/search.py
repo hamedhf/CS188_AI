@@ -66,7 +66,7 @@ class SearchProblem:
 
 
 class Node:
-    def __init__(self, state: tuple, old_actions: list, new_action: str) -> None:
+    def __init__(self, state: Union[tuple, str], old_actions: list, new_action: str) -> None:
         self.state = state
         self.actions = old_actions
         if new_action != "":
@@ -74,7 +74,7 @@ class Node:
 
 
 class CostedNode(Node):
-    def __init__(self, state: tuple, old_actions: list, new_action: str, cost: Union[int, float]) -> None:
+    def __init__(self, state: Union[tuple, str], old_actions: list, new_action: str, cost: Union[int, float]) -> None:
         super().__init__(state, old_actions, new_action)
         self.cost = cost
 
@@ -203,7 +203,30 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    fringe = util.PriorityQueue()
+    closed_set: list = []
+    start_node: CostedNode = CostedNode(problem.getStartState(
+    ), [], "", 0)
+    fringe.push(start_node, start_node.cost + heuristic(start_node.state, problem))
+
+    while not fringe.isEmpty():
+        current_node: CostedNode = fringe.pop()
+
+        if problem.isGoalState(current_node.state):
+            return current_node.actions
+        else:
+            # check if it’s already expanded or not
+            if current_node.state in closed_set:
+                continue
+
+            successors = problem.getSuccessors(current_node.state)
+            closed_set.append(current_node.state)
+
+            for successor in successors:
+                successor_node: CostedNode = CostedNode(successor[0], current_node.actions.copy(
+                ), successor[1], current_node.cost + successor[2])
+                fringe.push(successor_node, successor_node.cost + heuristic(successor_node.state, problem))
 
 
 # Abbreviations
