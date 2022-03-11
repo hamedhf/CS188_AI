@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -18,7 +18,9 @@ Pacman agents (in searchAgents.py).
 """
 
 from platform import node
+from typing import Union
 import util
+
 
 class SearchProblem:
     """
@@ -62,12 +64,20 @@ class SearchProblem:
         """
         util.raiseNotDefined()
 
+
 class Node:
     def __init__(self, state: tuple, old_actions: list, new_action: str) -> None:
         self.state = state
         self.actions = old_actions
         if new_action != "":
             self.actions.append(new_action)
+
+
+class CostedNode(Node):
+    def __init__(self, state: tuple, old_actions: list, new_action: str, cost: Union[int, float]) -> None:
+        super().__init__(state, old_actions, new_action)
+        self.cost = cost
+
 
 def tinyMazeSearch(problem):
     """
@@ -77,7 +87,8 @@ def tinyMazeSearch(problem):
     from game import Directions
     s = Directions.SOUTH
     w = Directions.WEST
-    return  [s, s, w, s, w, w, s, w]
+    return [s, s, w, s, w, w, s, w]
+
 
 def depthFirstSearch(problem):
     """
@@ -108,19 +119,20 @@ def depthFirstSearch(problem):
 
     while not fringe.isEmpty():
         current_node: Node = fringe.pop()
-        
+
         if problem.isGoalState(current_node.state):
             return current_node.actions
         else:
             # check if it’s already expanded or not
             if current_node.state in closed_set:
                 continue
-            
+
             successors = problem.getSuccessors(current_node.state)
             closed_set.append(current_node.state)
 
             for successor in successors:
-                successor_node: Node = Node(successor[0], current_node.actions.copy(), successor[1])
+                successor_node: Node = Node(
+                    successor[0], current_node.actions.copy(), successor[1])
                 fringe.push(successor_node)
 
 
@@ -135,25 +147,50 @@ def breadthFirstSearch(problem):
 
     while not fringe.isEmpty():
         current_node: Node = fringe.pop()
-        
+
         if problem.isGoalState(current_node.state):
             return current_node.actions
         else:
             # check if it’s already expanded or not
             if current_node.state in closed_set:
                 continue
-            
+
             successors = problem.getSuccessors(current_node.state)
             closed_set.append(current_node.state)
 
             for successor in successors:
-                successor_node: Node = Node(successor[0], current_node.actions.copy(), successor[1])
+                successor_node: Node = Node(
+                    successor[0], current_node.actions.copy(), successor[1])
                 fringe.push(successor_node)
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    fringe = util.PriorityQueue()
+    closed_set: list = []
+    start_node: CostedNode = CostedNode(problem.getStartState(), [], "", 0)
+    fringe.push(start_node, 0)
+
+    while not fringe.isEmpty():
+        current_node: CostedNode = fringe.pop()
+
+        if problem.isGoalState(current_node.state):
+            return current_node.actions
+        else:
+            # check if it’s already expanded or not
+            if current_node.state in closed_set:
+                continue
+
+            successors = problem.getSuccessors(current_node.state)
+            closed_set.append(current_node.state)
+
+            for successor in successors:
+                successor_node: CostedNode = CostedNode(successor[0], current_node.actions.copy(
+                ), successor[1], current_node.cost + successor[2])
+                fringe.push(successor_node, successor_node.cost)
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -161,6 +198,7 @@ def nullHeuristic(state, problem=None):
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
+
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
