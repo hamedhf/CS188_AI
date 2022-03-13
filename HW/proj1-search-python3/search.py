@@ -66,7 +66,7 @@ class SearchProblem:
 
 
 class Node:
-    def __init__(self, state: Union[tuple, str], old_actions: list, new_action: str) -> None:
+    def __init__(self, state, old_actions: list, new_action: str) -> None:
         self.state = state
         self.actions = old_actions
         if new_action != "":
@@ -74,7 +74,7 @@ class Node:
 
 
 class CostedNode(Node):
-    def __init__(self, state: Union[tuple, str], old_actions: list, new_action: str, cost: Union[int, float]) -> None:
+    def __init__(self, state, old_actions: list, new_action: str, cost: Union[int, float]) -> None:
         super().__init__(state, old_actions, new_action)
         self.cost = cost
 
@@ -208,7 +208,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     closed_set: list = []
     start_node: CostedNode = CostedNode(problem.getStartState(
     ), [], "", 0)
-    fringe.push(start_node, start_node.cost + heuristic(start_node.state, problem))
+    fringe.push(start_node, start_node.cost +
+                heuristic(start_node.state, problem))
 
     while not fringe.isEmpty():
         current_node: CostedNode = fringe.pop()
@@ -226,7 +227,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             for successor in successors:
                 successor_node: CostedNode = CostedNode(successor[0], current_node.actions.copy(
                 ), successor[1], current_node.cost + successor[2])
-                fringe.push(successor_node, successor_node.cost + heuristic(successor_node.state, problem))
+                fringe.push(successor_node, successor_node.cost +
+                            heuristic(successor_node.state, problem))
 
 
 # Abbreviations
