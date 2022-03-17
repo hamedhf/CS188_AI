@@ -34,6 +34,7 @@ description for details.
 Good luck and happy searching!
 """
 
+from turtle import position
 from typing import Tuple
 from game import Directions
 from game import Agent
@@ -305,7 +306,7 @@ class Corners:
         return (self.left_down == other.left_down) and (self.left_up == other.left_up) and (self.right_down == other.right_down) and (self.right_up == other.right_up)
 
 
-class CornersProblemState:
+class CPState:
     def __init__(self, position: Tuple[int, int], corners: Corners) -> None:
         self.position = position
         # ((1, 1), (1, top), (right, 1), (right, top))
@@ -348,16 +349,16 @@ class CornersProblem(search.SearchProblem):
 
         "needs fix"
         corners: Corners = Corners(False, False, False, False)
-        return CornersProblemState(self.startingPosition, corners)
+        return CPState(self.startingPosition, corners)
 
-    def isGoalState(self, state: CornersProblemState):
+    def isGoalState(self, state: CPState):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
         return state.corners.all_is_reached()
 
-    def getSuccessors(self, state: CornersProblemState):
+    def getSuccessors(self, state: CPState):
         """
         Returns successor states, the actions they require, and a cost of 1.
 
@@ -383,7 +384,7 @@ class CornersProblem(search.SearchProblem):
             next_x, next_y = int(x + dx), int(y + dy)
             if not self.walls[next_x][next_y]:
                 next_position = (next_x, next_y)
-                next_state: CornersProblemState = CornersProblemState(next_position, Corners(
+                next_state: CPState = CPState(next_position, Corners(
                     state.corners.left_down, state.corners.left_up, state.corners.right_down, state.corners.right_up))
                 if next_position == self.corners[0]:
                     next_state.corners.left_down = True
@@ -415,7 +416,7 @@ class CornersProblem(search.SearchProblem):
         return len(actions)
 
 
-def cornersHeuristic(state, problem):
+def cornersHeuristic(state: CPState, problem: CornersProblem):
     """
     A heuristic for the CornersProblem that you defined.
 
@@ -428,12 +429,30 @@ def cornersHeuristic(state, problem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible (as well as consistent).
     """
+    # corners = ((1, 1), (1, top), (right, 1), (right, top))
     corners = problem.corners  # These are the corner coordinates
     # These are the walls of the maze, as a Grid (game.py)
     walls = problem.walls
 
     "*** YOUR CODE HERE ***"
-    return 0  # Default to trivial solution
+    h = 0
+    position = state.position
+
+    if not state.corners.left_down:
+        h += abs(position[0] - corners[0][0]) + \
+            abs(position[1] - corners[0][1])
+    if not state.corners.left_up:
+        h += abs(position[0] - corners[1][0]) + \
+            abs(position[1] - corners[1][1])
+    if not state.corners.right_down:
+        h += abs(position[0] - corners[2][0]) + \
+            abs(position[1] - corners[2][1])
+    if not state.corners.right_up:
+        h += abs(position[0] - corners[3][0]) + \
+            abs(position[1] - corners[3][1])
+            
+    h = h / 2
+    return h
 
 
 class AStarCornersAgent(SearchAgent):
