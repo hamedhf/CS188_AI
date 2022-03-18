@@ -34,9 +34,7 @@ description for details.
 Good luck and happy searching!
 """
 
-from tkinter.messagebox import NO
 from typing import Tuple
-from xmlrpc.client import MAXINT
 from game import Directions
 from game import Agent
 from game import Actions
@@ -608,7 +606,13 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # print(problem.food)
+        # print(problem.food.asList())
+        # print(f"start: {startPosition}")
+        # print(f"food: {food.asList()}")
+        # print(f"walls: {walls}")
+        # print(f"food: {food}")
+        return search.bfs(problem)
 
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -645,7 +649,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x, y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.food[x][y]
 
 
 def mazeDistance(point1, point2, gameState):
