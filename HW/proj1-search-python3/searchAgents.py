@@ -434,24 +434,26 @@ def cornersHeuristic(state: CPState, problem: CornersProblem):
     walls = problem.walls
 
     "*** YOUR CODE HERE ***"
-    h = 0
+    d1 = d2 = d3 = d4 = 0
     position = state.position
 
     if not state.corners.left_down:
-        h += abs(position[0] - corners[0][0]) + \
+        d1 += abs(position[0] - corners[0][0]) + \
             abs(position[1] - corners[0][1])
+
     if not state.corners.left_up:
-        h += abs(position[0] - corners[1][0]) + \
+        d2 += abs(position[0] - corners[1][0]) + \
             abs(position[1] - corners[1][1])
+
     if not state.corners.right_down:
-        h += abs(position[0] - corners[2][0]) + \
+        d3 += abs(position[0] - corners[2][0]) + \
             abs(position[1] - corners[2][1])
+            
     if not state.corners.right_up:
-        h += abs(position[0] - corners[3][0]) + \
+        d4 += abs(position[0] - corners[3][0]) + \
             abs(position[1] - corners[3][1])
 
-    h = h / 2
-    return h
+    return max(d1, d2, d3, d4)
 
 
 class AStarCornersAgent(SearchAgent):
