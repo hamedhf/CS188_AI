@@ -34,8 +34,9 @@ description for details.
 Good luck and happy searching!
 """
 
-from turtle import position
+from tkinter.messagebox import NO
 from typing import Tuple
+from xmlrpc.client import MAXINT
 from game import Directions
 from game import Agent
 from game import Actions
@@ -450,7 +451,7 @@ def cornersHeuristic(state: CPState, problem: CornersProblem):
     if not state.corners.right_up:
         h += abs(position[0] - corners[3][0]) + \
             abs(position[1] - corners[3][1])
-            
+
     h = h / 2
     return h
 
@@ -526,7 +527,7 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchType = FoodSearchProblem
 
 
-def foodHeuristic(state, problem):
+def foodHeuristic(state, problem: FoodSearchProblem):
     """
     Your heuristic for the FoodSearchProblem goes here.
 
@@ -556,7 +557,23 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    # print("foodGrid: \n", foodGrid)
+    # print("foodGrid asList: ", foodGrid.asList())
+
+    food_positions: list = foodGrid.asList()
+    h = 0
+
+    for f1_pos in food_positions:
+        for f2_pos in food_positions:
+            foods_distance = abs(f1_pos[0] - f2_pos[0]) + \
+                abs(f1_pos[1] - f2_pos[1])
+            min_pacman_distance = min(abs(f1_pos[0] - position[0]) + abs(
+                f1_pos[1] - position[1]), abs(f2_pos[0] - position[0]) + abs(f2_pos[1] - position[1]))
+            sum_distances = foods_distance + min_pacman_distance
+            if h < sum_distances:
+                h = sum_distances
+
+    return h
 
 
 class ClosestDotSearchAgent(SearchAgent):
