@@ -317,7 +317,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
       Your expectimax agent (question 4)
     """
 
-    def getAction(self, gameState):
+    def getAction(self, gameState: GameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
 
@@ -325,7 +325,42 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        legal_moves = gameState.getLegalActions(self.index)
+        successor_states = list(
+            map(lambda action: gameState.generateSuccessor(self.index, action), legal_moves))
+        successor_values = list(
+            map(lambda state: self.value(1, state), successor_states))
+        idx = successor_values.index(max(successor_values))
+
+        return legal_moves[idx]
+
+    def value(self, agent_index: int, state: GameState):
+        if state.isWin() or state.isLose() or agent_index == state.getNumAgents() * self.depth:
+            # it’s a terminal state
+            return self.evaluationFunction(state)
+        else:
+            # non terminal state
+            return self.max_value(agent_index, state) if agent_index % state.getNumAgents() == 0 else self.exp_value(agent_index, state)
+
+    def max_value(self, agent_index: int, state: GameState):
+        v = float("-inf")
+        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
+        successor_states = list(
+            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_moves))
+        for successor_state in successor_states:
+            v = max(v, self.value(agent_index + 1, successor_state))
+        return v
+
+    def exp_value(self, agent_index: int, state: GameState):
+        v = float(0)
+        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
+        successor_states = list(
+            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_moves))
+        p = 1/len(successor_states)
+        for successor_state in successor_states:
+            v += p * self.value(agent_index + 1, successor_state)
+        return v
 
 
 def betterEvaluationFunction(currentGameState):
