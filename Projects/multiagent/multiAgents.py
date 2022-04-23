@@ -142,23 +142,23 @@ class ReflexAgent(Agent):
         # ghost_count = len(newGhostStates)
         # foods = currentGameState.getFood()
         # if foods[newPos[0]][newPos[1]]:
-        #     successor_score += 1 * ghost_count
+        #     successor_score += 1
 
         # capsules = currentGameState.getCapsules()
         # if newPos in capsules:
         #     successor_score += 10
 
         # food_positions = foods.asList()
-        # nearest_food_distance = abs(newPos[0] - food_positions[0][0])
+        # nearest_food_distance = manhattanDistance(newPos - food_positions[0])
         # for food_pos in food_positions:
-        #     tmp = abs(newPos[0] - food_pos[0])
+        #     tmp = manhattanDistance(newPos - food_pos)
         #     nearest_food_distance = tmp if tmp < nearest_food_distance else nearest_food_distance
 
-        # successor_score += (-(0.1) * nearest_food_distance) * ghost_count
-        return 0
+        # successor_score += (-(0.5) * nearest_food_distance)
+        return successor_score
 
 
-def scoreEvaluationFunction(currentGameState: GameState):
+def scoreEvaluationFunction(currentGameState: GameState) -> float:
     """
     This default evaluation function just returns the score of the state.
     The score is the same one displayed in the Pacman GUI.
@@ -261,12 +261,55 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
-    def getAction(self, gameState):
+    def getAction(self, gameState: GameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        legal_moves = gameState.getLegalActions(self.index)
+        alpha = float("-inf")
+        beta = float("inf")
+        successor_states = list(
+            map(lambda action: gameState.generateSuccessor(self.index, action), legal_moves))
+        successor_values = []
+        for state in successor_states:
+            v = self.value(1, state, alpha, beta)
+            successor_values.append(v)
+            alpha = max(v, alpha)
+        idx = successor_values.index(max(successor_values))
+
+        return legal_moves[idx]
+
+    def value(self, agent_index: int, state: GameState, alpha: float, beta: float):
+        if state.isWin() or state.isLose() or agent_index == state.getNumAgents() * self.depth:
+            # it’s a terminal state
+            return self.evaluationFunction(state)
+        else:
+            # non terminal state
+            return self.max_value(agent_index, state, alpha, beta) if agent_index % state.getNumAgents() == 0 else self.min_value(agent_index, state, alpha, beta)
+
+    def max_value(self, agent_index: int, state: GameState, alpha: float, beta: float):
+        v = float("-inf")
+        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
+        for i in range(len(legal_moves)):
+            v = max(v, self.value(agent_index + 1, state.generateSuccessor(agent_index %
+                    state.getNumAgents(), legal_moves[i]), alpha, beta))
+            if v > beta:
+                return v
+            alpha = max(alpha, v)
+        return v
+
+    def min_value(self, agent_index: int, state: GameState, alpha: float, beta: float):
+        v = float("inf")
+        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
+        for i in range(len(legal_moves)):
+            v = min(v, self.value(agent_index + 1, state.generateSuccessor(agent_index %
+                    state.getNumAgents(), legal_moves[i]), alpha, beta))
+            if v < alpha:
+                return v
+            beta = min(beta, v)
+        return v
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
