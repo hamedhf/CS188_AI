@@ -332,7 +332,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return p * sum(successor_values)
 
 
-def betterEvaluationFunction(currentGameState):
+def betterEvaluationFunction(currentGameState: GameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
@@ -341,6 +341,12 @@ def betterEvaluationFunction(currentGameState):
     """
     "*** YOUR CODE HERE ***"
 
+    closest_food_distance = float("inf")
+    for food_pos in currentGameState.getFood().asList():
+        tmp = manhattanDistance(food_pos, currentGameState.getPacmanPosition())
+        closest_food_distance = tmp if tmp < closest_food_distance else closest_food_distance
+
+    return currentGameState.getScore() + 1 / closest_food_distance
 
 # Abbreviation
 better = betterEvaluationFunction
