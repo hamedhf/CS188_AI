@@ -29,7 +29,7 @@ class ReflexAgent(Agent):
     headers.
     """
 
-    def getAction(self, gameState):
+    def getAction(self, gameState: GameState):
         """
         You do not need to change this method, but you're welcome to.
 
@@ -51,10 +51,11 @@ class ReflexAgent(Agent):
         chosenIndex = random.choice(bestIndices)
 
         "Add more of your code here if you want to"
+        # print(list(map(lambda g: g.scaredTimer, gameState.getGhostStates())))
 
         return legalMoves[chosenIndex]
 
-    def evaluationFunction(self, currentGameState, action):
+    def evaluationFunction(self, currentGameState: GameState, action: str):
         """
         Design a better evaluation function here.
 
@@ -77,85 +78,51 @@ class ReflexAgent(Agent):
         newScaredTimes = [
             ghostState.scaredTimer for ghostState in newGhostStates]
 
-        # successorGameState:
-        # %%%%%%%%%%%%%%%%%%%%
-        # %o...%........%....%
-        # %.%%.%.%%%%%%.%.%%.%
-        # %.%..............%.%
-        # %.%.%%.%%  %%.%%.%.%
-        # %......%    %......%
-        # % %.%%.%%%%%%.%%.%G%
-        # % %.   ..........%.%
-        # %G%% % %%%%%%.%.%%.%
-        # % <  %    ....%...o%
-        # %%%%%%%%%%%%%%%%%%%%
-        # newPos: (2, 1)
-        # newFood:
-        # FFFFFFFFFFFFFFFFFFFF
-        # FFTTTFTTTTTTTTFTTTTF
-        # FTFFTFTFFFFFFTFTFFTF
-        # FTFTTTTTTTTTTTTTTFTF
-        # FTFTFFTFFFFFFTFFTFTF
-        # FTTTTTTFFFFFFTTTTTTF
-        # FTFTFFTFFFFFFTFFTFTF
-        # FTFTTTTTTTTTTTTTTFTF
-        # FTFFTFTFFFFFFTFTFFTF
-        # FTTTTFTTTFTTTTFTTTFF
-        # FFFFFFFFFFFFFFFFFFFF
         # newGhostStates: [<game.AgentState object at 0x7f8e9d754ac8>, <game.AgentState object at 0x7f8e9d754e10>]
-        # newScaredTimes: [30, 30]
-        # successorGameState.getScore()
 
         "*** YOUR CODE HERE ***"
-        # food_positions = successorGameState.getFood().asList()
         # ghost_positions = successorGameState.getGhostPositions()
-        successor_score = 0
 
-        # walls = currentGameState.getWalls()
-        # pos = list(currentGameState.getPacmanPosition())
-        # if action == Directions.NORTH:
-        #     pos[1] += 1
-        # elif action == Directions.SOUTH:
-        #     pos[1] -= 1
-        # elif action == Directions.EAST:
-        #     pos[0] += 1
-        # elif action == Directions.WEST:
-        #     pos[0] -= 1
-        # else:
-        #     # stop action
-        #     pass
+        # no stop action
+        if action == Directions.STOP:
+            return float("-inf")
 
-        # # avoid walls
-        # if pos in walls:
-        #     successor_score -= 10
+        # check if agent hits the walls or not
+        walls = currentGameState.getWalls()
+        pos = list(currentGameState.getPacmanPosition())
+        if action == Directions.NORTH:
+            pos[1] += 1
+        elif action == Directions.SOUTH:
+            pos[1] -= 1
+        elif action == Directions.EAST:
+            pos[0] += 1
+        elif action == Directions.WEST:
+            pos[0] -= 1
+        else:
+            # stop action
+            pass
 
-        # eat ghost if possible, else run
-        # for ghost in newGhostStates:
-        #     distance_from_ghost = manhattanDistance(
-        #         ghost.getPosition(), newPos)
+        # avoid and action which fails
+        if pos in walls:
+            return float("-inf")
 
-        #     if ghost.scaredTimer > distance_from_ghost:
-        #         successor_score += 10
-        #     else:
-        #         successor_score -= 20
+        # go to the closest food
+        current_game_state_foods = currentGameState.getFood().asList()
+        closest_food_distance = float("inf")
+        for food_pos in current_game_state_foods:
+            tmp = manhattanDistance(food_pos, newPos)
+            closest_food_distance = tmp if tmp < closest_food_distance else closest_food_distance
 
-        # ghost_count = len(newGhostStates)
-        # foods = currentGameState.getFood()
-        # if foods[newPos[0]][newPos[1]]:
-        #     successor_score += 1
+        # minimize number of capsuls
+        remaining_capsuls = len(successorGameState.getCapsules())
 
-        # capsules = currentGameState.getCapsules()
-        # if newPos in capsules:
-        #     successor_score += 10
+        # eat ghosts if it’s possible
+        current_ghost_states = currentGameState.getGhostStates()
+        ghosts_values = list(map(lambda g: g.scaredTimer - manhattanDistance(g.getPosition(), newPos) - 1, current_ghost_states))
+        reachable_ghosts_values = list(filter(lambda v: v >= 0, ghosts_values))
+        ghosts_value = min(reachable_ghosts_values) + 1 if len(reachable_ghosts_values) != 0 else 1
 
-        # food_positions = foods.asList()
-        # nearest_food_distance = manhattanDistance(newPos - food_positions[0])
-        # for food_pos in food_positions:
-        #     tmp = manhattanDistance(newPos - food_pos)
-        #     nearest_food_distance = tmp if tmp < nearest_food_distance else nearest_food_distance
-
-        # successor_score += (-(0.5) * nearest_food_distance)
-        return successor_score
+        return successorGameState.getScore() + 1 / (remaining_capsuls + 1) + 1 / (closest_food_distance + 1) + 1 / ghosts_value
 
 
 def scoreEvaluationFunction(currentGameState: GameState) -> float:
@@ -220,14 +187,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        legal_moves = gameState.getLegalActions(self.index)
+        legal_actions = gameState.getLegalActions(self.index)
         successor_states = list(
-            map(lambda action: gameState.generateSuccessor(self.index, action), legal_moves))
+            map(lambda action: gameState.generateSuccessor(self.index, action), legal_actions))
         successor_values = list(
             map(lambda state: self.value(1, state), successor_states))
         idx = successor_values.index(max(successor_values))
 
-        return legal_moves[idx]
+        return legal_actions[idx]
 
     def value(self, agent_index: int, state: GameState):
         if state.isWin() or state.isLose() or agent_index == state.getNumAgents() * self.depth:
@@ -238,22 +205,22 @@ class MinimaxAgent(MultiAgentSearchAgent):
             return self.max_value(agent_index, state) if agent_index % state.getNumAgents() == 0 else self.min_value(agent_index, state)
 
     def max_value(self, agent_index: int, state: GameState):
-        v = float("-inf")
-        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
+        legal_actions = state.getLegalActions(
+            agent_index % state.getNumAgents())
         successor_states = list(
-            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_moves))
-        for successor_state in successor_states:
-            v = max(v, self.value(agent_index + 1, successor_state))
-        return v
+            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_actions))
+        successor_values = list(map(lambda state: self.value(
+            agent_index + 1, state), successor_states))
+        return max(successor_values)
 
     def min_value(self, agent_index: int, state: GameState):
-        v = float("inf")
-        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
+        legal_actions = state.getLegalActions(
+            agent_index % state.getNumAgents())
         successor_states = list(
-            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_moves))
-        for successor_state in successor_states:
-            v = min(v, self.value(agent_index + 1, successor_state))
-        return v
+            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_actions))
+        successor_values = list(map(lambda state: self.value(
+            agent_index + 1, state), successor_states))
+        return min(successor_values)
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -267,11 +234,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        legal_moves = gameState.getLegalActions(self.index)
+        legal_actions = gameState.getLegalActions(self.index)
         alpha = float("-inf")
         beta = float("inf")
         successor_states = list(
-            map(lambda action: gameState.generateSuccessor(self.index, action), legal_moves))
+            map(lambda action: gameState.generateSuccessor(self.index, action), legal_actions))
         successor_values = []
         for state in successor_states:
             v = self.value(1, state, alpha, beta)
@@ -279,7 +246,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             alpha = max(v, alpha)
         idx = successor_values.index(max(successor_values))
 
-        return legal_moves[idx]
+        return legal_actions[idx]
 
     def value(self, agent_index: int, state: GameState, alpha: float, beta: float):
         if state.isWin() or state.isLose() or agent_index == state.getNumAgents() * self.depth:
@@ -291,10 +258,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
     def max_value(self, agent_index: int, state: GameState, alpha: float, beta: float):
         v = float("-inf")
-        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
-        for i in range(len(legal_moves)):
+        legal_actions = state.getLegalActions(
+            agent_index % state.getNumAgents())
+        for i in range(len(legal_actions)):
             v = max(v, self.value(agent_index + 1, state.generateSuccessor(agent_index %
-                    state.getNumAgents(), legal_moves[i]), alpha, beta))
+                    state.getNumAgents(), legal_actions[i]), alpha, beta))
             if v > beta:
                 return v
             alpha = max(alpha, v)
@@ -302,10 +270,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
     def min_value(self, agent_index: int, state: GameState, alpha: float, beta: float):
         v = float("inf")
-        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
-        for i in range(len(legal_moves)):
+        legal_actions = state.getLegalActions(
+            agent_index % state.getNumAgents())
+        for i in range(len(legal_actions)):
             v = min(v, self.value(agent_index + 1, state.generateSuccessor(agent_index %
-                    state.getNumAgents(), legal_moves[i]), alpha, beta))
+                    state.getNumAgents(), legal_actions[i]), alpha, beta))
             if v < alpha:
                 return v
             beta = min(beta, v)
@@ -326,14 +295,14 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        legal_moves = gameState.getLegalActions(self.index)
+        legal_actions = gameState.getLegalActions(self.index)
         successor_states = list(
-            map(lambda action: gameState.generateSuccessor(self.index, action), legal_moves))
+            map(lambda action: gameState.generateSuccessor(self.index, action), legal_actions))
         successor_values = list(
             map(lambda state: self.value(1, state), successor_states))
         idx = successor_values.index(max(successor_values))
 
-        return legal_moves[idx]
+        return legal_actions[idx]
 
     def value(self, agent_index: int, state: GameState):
         if state.isWin() or state.isLose() or agent_index == state.getNumAgents() * self.depth:
@@ -344,23 +313,23 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             return self.max_value(agent_index, state) if agent_index % state.getNumAgents() == 0 else self.exp_value(agent_index, state)
 
     def max_value(self, agent_index: int, state: GameState):
-        v = float("-inf")
-        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
+        legal_actions = state.getLegalActions(
+            agent_index % state.getNumAgents())
         successor_states = list(
-            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_moves))
-        for successor_state in successor_states:
-            v = max(v, self.value(agent_index + 1, successor_state))
-        return v
+            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_actions))
+        successor_values = list(map(lambda state: self.value(
+            agent_index + 1, state), successor_states))
+        return max(successor_values)
 
     def exp_value(self, agent_index: int, state: GameState):
-        v = float(0)
-        legal_moves = state.getLegalActions(agent_index % state.getNumAgents())
+        legal_actions = state.getLegalActions(
+            agent_index % state.getNumAgents())
         successor_states = list(
-            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_moves))
+            map(lambda action: state.generateSuccessor(agent_index % state.getNumAgents(), action), legal_actions))
         p = 1/len(successor_states)
-        for successor_state in successor_states:
-            v += p * self.value(agent_index + 1, successor_state)
-        return v
+        successor_values = list(map(lambda state: self.value(
+            agent_index + 1, state), successor_states))
+        return p * sum(successor_values)
 
 
 def betterEvaluationFunction(currentGameState):
@@ -371,7 +340,6 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
 
 # Abbreviation
