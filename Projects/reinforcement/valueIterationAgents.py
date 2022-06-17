@@ -228,13 +228,15 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
             if not self.mdp.isTerminal(state):
                 max_Q_value = float('-inf')
                 for action in self.mdp.getPossibleActions(state):
-                    max_Q_value = max(max_Q_value, self.getQValue(state, action))
+                    max_Q_value = max(
+                        max_Q_value, self.getQValue(state, action))
                 self.values[state] = max_Q_value
 
             for predecessor in predecessors[state]:
                 max_Q_value = float('-inf')
                 for action in self.mdp.getPossibleActions(predecessor):
-                    max_Q_value = max(max_Q_value, self.getQValue(predecessor, action))
+                    max_Q_value = max(
+                        max_Q_value, self.getQValue(predecessor, action))
 
                 diff = abs(self.values[predecessor] - max_Q_value)
 
