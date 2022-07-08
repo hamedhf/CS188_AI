@@ -326,7 +326,7 @@ class ExactInference(InferenceModule):
 
         self.beliefs.normalize()
 
-    def elapseTime(self, gameState):
+    def elapseTime(self, gameState: busters.GameState):
         """
         Predict beliefs in response to a time step passing from the current
         state.
@@ -336,7 +336,23 @@ class ExactInference(InferenceModule):
         current position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        # Passage of time
+        # We have B(X t) = P(X t | e 1:t)
+        # We want B'(X t+1) = P(X t+1 | e 1:t) = Sigma over xt [P(X t+1 | xt) * B(xt)]
+
+        # we save this probs for consuming less time
+        transition_probs = {}
+        for old_position in self.allPositions:
+            transition_probs[old_position] = self.getPositionDistribution(
+                gameState, old_position)
+
+        old_beliefs = self.beliefs.copy()
+        for new_position in self.allPositions:
+            new_value = 0
+            for old_position in self.allPositions:
+                new_value += transition_probs[old_position][new_position] * \
+                    old_beliefs[old_position]
+            self.beliefs[new_position] = new_value
 
     def getBeliefDistribution(self):
         return self.beliefs
