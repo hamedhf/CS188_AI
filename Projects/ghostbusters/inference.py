@@ -412,13 +412,14 @@ class ParticleFilter(InferenceModule):
         else:
             self.initializeUniformly(gameState)
 
-    def elapseTime(self, gameState):
+    def elapseTime(self, gameState: busters.GameState):
         """
         Sample each particle's next state based on its current state and the
         gameState.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        self.particles = [self.getPositionDistribution(
+            gameState, particle).sample() for particle in self.particles]
 
     def getBeliefDistribution(self):
         """
