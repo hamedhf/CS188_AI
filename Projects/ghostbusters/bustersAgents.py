@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -12,36 +12,49 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
+from distanceCalculator import Distancer
+from game import Actions
 import util
 from game import Agent
 from game import Directions
 from keyboardAgents import KeyboardAgent
 import inference
 import busters
+from typing import Callable
+
 
 class NullGraphics:
     "Placeholder for graphics"
-    def initialize(self, state, isBlue = False):
+
+    def initialize(self, state, isBlue=False):
         pass
+
     def update(self, state):
         pass
+
     def pause(self):
         pass
+
     def draw(self, state):
         pass
+
     def updateDistributions(self, dist):
         pass
+
     def finish(self):
         pass
+
 
 class KeyboardInference(inference.InferenceModule):
     """
     Basic inference module for use with the keyboard.
     """
+
     def initializeUniformly(self, gameState):
         "Begin with a uniform distribution over ghost positions."
         self.beliefs = util.Counter()
-        for p in self.legalPositions: self.beliefs[p] = 1.0
+        for p in self.legalPositions:
+            self.beliefs[p] = 1.0
         self.beliefs.normalize()
 
     def observeUpdate(self, observation, gameState):
@@ -66,7 +79,7 @@ class KeyboardInference(inference.InferenceModule):
 class BustersAgent:
     "An agent that tracks and displays its beliefs about ghost positions."
 
-    def __init__( self, index = 0, inference = "ExactInference", ghostAgents = None, observeEnable = True, elapseTimeEnable = True):
+    def __init__(self, index=0, inference="ExactInference", ghostAgents=None, observeEnable=True, elapseTimeEnable=True):
         try:
             inferenceType = util.lookup(inference, globals())
         except Exception:
@@ -81,13 +94,15 @@ class BustersAgent:
         self.display = __main__._display
         for inference in self.inferenceModules:
             inference.initialize(gameState)
-        self.ghostBeliefs = [inf.getBeliefDistribution() for inf in self.inferenceModules]
+        self.ghostBeliefs = [inf.getBeliefDistribution()
+                             for inf in self.inferenceModules]
         self.firstMove = True
 
     def observationFunction(self, gameState):
         "Removes the ghost states from the gameState"
         agents = gameState.data.agentStates
-        gameState.data.agentStates = [agents[0]] + [None for i in range(1, len(agents))]
+        gameState.data.agentStates = [agents[0]] + \
+            [None for i in range(1, len(agents))]
         return gameState
 
     def getAction(self, gameState):
@@ -106,10 +121,11 @@ class BustersAgent:
         "By default, a BustersAgent just stops.  This should be overridden."
         return Directions.STOP
 
+
 class BustersKeyboardAgent(BustersAgent, KeyboardAgent):
     "An agent controlled by the keyboard that displays beliefs about ghost positions."
 
-    def __init__(self, index = 0, inference = "KeyboardInference", ghostAgents = None):
+    def __init__(self, index=0, inference="KeyboardInference", ghostAgents=None):
         KeyboardAgent.__init__(self, index)
         BustersAgent.__init__(self, index, inference, ghostAgents)
 
@@ -119,19 +135,16 @@ class BustersKeyboardAgent(BustersAgent, KeyboardAgent):
     def chooseAction(self, gameState):
         return KeyboardAgent.getAction(self, gameState)
 
-from distanceCalculator import Distancer
-from game import Actions
-from game import Directions
 
 class GreedyBustersAgent(BustersAgent):
     "An agent that charges the closest ghost."
 
-    def registerInitialState(self, gameState):
+    def registerInitialState(self, gameState: busters.GameState):
         "Pre-computes the distance between every two points."
         BustersAgent.registerInitialState(self, gameState)
         self.distancer = Distancer(gameState.data.layout, False)
 
-    def chooseAction(self, gameState):
+    def chooseAction(self, gameState: busters.GameState):
         """
         First computes the most likely position of each ghost that has
         not yet been captured, then chooses an action that brings
@@ -144,3 +157,13 @@ class GreedyBustersAgent(BustersAgent):
             [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
              if livingGhosts[i+1]]
         "*** YOUR CODE HERE ***"
+        max_pos: Callable[[inference.DiscreteDistribution],
+                          str] = lambda belief: belief.argMax()
+        alive_positions = list(map(max_pos, livingGhostPositionDistributions))
+        alive_positions = sorted(
+            alive_positions, key=lambda p: self.distancer.getDistance(p, pacmanPosition))
+        closest = alive_positions[0]
+        # Actions.getSuccessor(pacmanPosition, action) returns the successor_position
+        actions = sorted(legal, key=lambda action: self.distancer.getDistance(
+            closest, Actions.getSuccessor(pacmanPosition, action)))
+        return actions[0]
