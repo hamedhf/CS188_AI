@@ -367,10 +367,10 @@ class ParticleFilter(InferenceModule):
         InferenceModule.__init__(self, ghostAgent)
         self.setNumParticles(numParticles)
 
-    def setNumParticles(self, numParticles):
+    def setNumParticles(self, numParticles: int):
         self.numParticles = numParticles
 
-    def initializeUniformly(self, gameState):
+    def initializeUniformly(self, gameState: busters.GameState):
         """
         Initialize a list of particles. Use self.numParticles for the number of
         particles. Use self.legalPositions for the legal board positions where
@@ -378,9 +378,15 @@ class ParticleFilter(InferenceModule):
         distributed across positions in order to ensure a uniform prior. Use
         self.particles for the list of particles.
         """
-        self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        self.particles = []
+        legal_positions = self.legalPositions.copy()
+        for i in range(self.numParticles):
+            p = random.choice(legal_positions)
+            legal_positions.remove(p)
+            self.particles.append(p)
+            if len(legal_positions) == 0:
+                legal_positions = self.legalPositions.copy()
 
     def observeUpdate(self, observation, gameState):
         """
@@ -414,7 +420,11 @@ class ParticleFilter(InferenceModule):
         This function should return a normalized distribution.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        distribution = DiscreteDistribution()
+        for p in self.particles:
+            distribution[p] += 1
+        distribution.normalize()
+        return distribution
 
 
 class JointParticleFilter(ParticleFilter):
