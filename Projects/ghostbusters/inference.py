@@ -28,6 +28,8 @@ class DiscreteDistribution(dict):
     """
 
     def __getitem__(self, key):
+        # The setdefault() method returns the value of the item with the specified key.
+        # If the key does not exist, insert the key, with the specified value.
         self.setdefault(key, 0)
         return dict.__getitem__(self, key)
 
@@ -77,10 +79,10 @@ class DiscreteDistribution(dict):
         {}
         """
         "*** YOUR CODE HERE ***"
-        if self.total == 0:
+        total = self.total()
+        if total == 0:
             return
         else:
-            total = self.total()
             for key, value in self.items():
                 self.__setitem__(key, value / total)
                 # self[key] = value / total
@@ -297,7 +299,7 @@ class ExactInference(InferenceModule):
             self.beliefs[p] = 1.0
         self.beliefs.normalize()
 
-    def observeUpdate(self, observation, gameState: busters.GameState):
+    def observeUpdate(self, observation: Union[float, None], gameState: busters.GameState):
         """
         Update beliefs based on the distance observation and Pacman's position.
 
@@ -313,7 +315,14 @@ class ExactInference(InferenceModule):
         position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        # Observation equation
+        # We have B'(X t+1) = P(X t+1 | e 1:t )
+        # We want B(X t+1 ) or P(X t+1 | e 1:t+1 ) = Normalize[ P(e t+1 | X t+1 ) * B'(X t+1) ]
+        old_beliefs = self.beliefs.copy()
+        for position in self.allPositions:
+            evidence_prob = self.getObservationProb(observation, gameState.getPacmanPosition(
+            ), position, self.getJailPosition())
+            self.beliefs[position] = evidence_prob * old_beliefs[position]
 
         self.beliefs.normalize()
 
