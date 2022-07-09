@@ -517,7 +517,7 @@ class JointParticleFilter(ParticleFilter):
         else:
             self.initializeUniformly(gameState)
 
-    def elapseTime(self, gameState):
+    def elapseTime(self, gameState: busters.GameState):
         """
         Sample each particle's next state based on its current state and the
         gameState.
@@ -528,7 +528,11 @@ class JointParticleFilter(ParticleFilter):
 
             # now loop through and update each entry in newParticle...
             "*** YOUR CODE HERE ***"
-            raiseNotDefined()
+            for i in range(self.numGhosts):
+                dist: DiscreteDistribution = self.getPositionDistribution(
+                    gameState, oldParticle, i, self.ghostAgents[i])
+                ghost_new_pos = dist.sample()
+                newParticle[i] = ghost_new_pos
 
             """*** END YOUR CODE HERE ***"""
             newParticles.append(tuple(newParticle))
