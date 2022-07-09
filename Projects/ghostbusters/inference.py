@@ -382,9 +382,9 @@ class ParticleFilter(InferenceModule):
         self.particles = []
         legal_positions = self.legalPositions.copy()
         for i in range(self.numParticles):
-            p = random.choice(legal_positions)
-            legal_positions.remove(p)
-            self.particles.append(p)
+            particle = random.choice(legal_positions)
+            legal_positions.remove(particle)
+            self.particles.append(particle)
             if len(legal_positions) == 0:
                 legal_positions = self.legalPositions.copy()
 
@@ -446,7 +446,7 @@ class JointParticleFilter(ParticleFilter):
     def __init__(self, numParticles=600):
         self.setNumParticles(numParticles)
 
-    def initialize(self, gameState, legalPositions):
+    def initialize(self, gameState: busters.GameState, legalPositions: list):
         """
         Store information about the game, then initialize particles.
         """
@@ -455,15 +455,23 @@ class JointParticleFilter(ParticleFilter):
         self.legalPositions = legalPositions
         self.initializeUniformly(gameState)
 
-    def initializeUniformly(self, gameState):
+    def initializeUniformly(self, gameState: busters.GameState):
         """
         Initialize particles to be consistent with a uniform prior. Particles
         should be evenly distributed across positions in order to ensure a
         uniform prior.
         """
-        self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        self.particles = []
+        cartesian_product = list(itertools.product(
+            self.legalPositions, repeat=self.numGhosts))
+        for i in range(self.numParticles):
+            parrticle = random.choice(cartesian_product)
+            cartesian_product.remove(parrticle)
+            self.particles.append(parrticle)
+            if len(cartesian_product) == 0:
+                cartesian_product = list(itertools.product(
+                    self.legalPositions, repeat=self.numGhosts))
 
     def addGhostAgent(self, agent):
         """
