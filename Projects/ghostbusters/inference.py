@@ -483,7 +483,7 @@ class JointParticleFilter(ParticleFilter):
     def getJailPosition(self, i):
         return (2 * i + 1, 1)
 
-    def observe(self, gameState):
+    def observe(self, gameState: busters.GameState):
         """
         Resample the set of particles using the likelihood of the noisy
         observations.
@@ -491,7 +491,7 @@ class JointParticleFilter(ParticleFilter):
         observation = gameState.getNoisyGhostDistances()
         self.observeUpdate(observation, gameState)
 
-    def observeUpdate(self, observation, gameState):
+    def observeUpdate(self, observation: list, gameState: busters.GameState):
         """
         Update beliefs based on the distance observation and Pacman's position.
 
@@ -504,7 +504,18 @@ class JointParticleFilter(ParticleFilter):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        distribution = self.getBeliefDistribution()
+
+        for i in range(self.numGhosts):
+            for key_particle in distribution.keys():
+                distribution[key_particle] *= self.getObservationProb(
+                    observation[i], gameState.getPacmanPosition(), key_particle[i], self.getJailPosition(i))
+
+        if distribution.total() != 0:
+            self.particles = [distribution.sample()
+                              for i in range(self.numParticles)]
+        else:
+            self.initializeUniformly(gameState)
 
     def elapseTime(self, gameState):
         """
